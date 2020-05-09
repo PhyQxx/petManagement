@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.data.dao.ISalesoutDao">
+
+	<!--通过主键删除用户 -->
+	<delete id="deleteById" parameterType="java.lang.String">
+		UPDATE
+		m_salesout
+		SET
+		del_flag='1'
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</delete>
+
+	<!-- 查询用户明细 -->
+	<select id="list" resultType="com.data.entity.SalesoutEntity"
+		parameterType="com.data.entity.SalesoutEntity">
+		SELECT
+		m.id,
+		m.orderno,
+		m.goods,
+		m.amount,
+		m.time,
+		m.remark,
+		m.del_flag
+		FROM
+		m_salesout AS m
+		WHERE
+		m.del_flag = '0'
+		<if test="orderno != null and orderno != ''">
+			AND m.orderno like
+			CONCAT('%',#{orderno,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="goods != null and goods != ''">
+			AND m.goods
+			like
+			CONCAT('%',#{goods,jdbcType=VARCHAR},'%' )
+		</if>
+		order by time desc
+		limit #{start},#{rows}
+	</select>
+
+	<!--按条件统计查询 -->
+	<select id="count" resultType="long"
+		parameterType="com.data.entity.SalesoutEntity">
+		SELECT count(*)
+		FROM m_salesout mu
+		WHERE mu.del_flag = '0'
+		<if test="orderno != null and orderno != ''">
+			AND m.orderno like
+			CONCAT('%',#{orderno,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="goods != null and goods != ''">
+			AND m.goods
+			like
+			CONCAT('%',#{goods,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="sort != null and sort != ''">
+			order by #{sort} #{order}
+		</if>
+	</select>
+
+	<!--通过user_id获取用户信息 -->
+	<select id="getById" parameterType="string"
+		resultType="com.data.entity.SalesoutEntity">
+		SELECT
+		m.id,
+		m.orderno,
+		m.goods,
+		m.amount,
+		m.time,
+		m.remark,
+		m.del_flag
+		FROM
+		m_salesout AS m
+		WHERE
+		m.del_flag = '0'
+		AND m.id =
+		#{id,jdbcType=VARCHAR}
+	</select>
+
+	<!--新增用户 -->
+	<insert id="insert"
+		parameterType="com.data.entity.SalesoutEntity">
+		INSERT INTO m_salesout (
+		id,
+		orderno,
+		goods,
+		amount,
+		time,
+		remark,
+		del_flag
+		)VALUES(
+		REPLACE(UUID(),'-',''),
+		#{orderno,jdbcType=VARCHAR},
+		#{goods,jdbcType=VARCHAR},
+		#{amount,jdbcType=VARCHAR},
+		now(),
+		#{remark,jdbcType=VARCHAR},
+		'0'
+		)
+
+	</insert>
+
+	<!--更新用户 -->
+	<update id="update"
+		parameterType="com.data.entity.SalesoutEntity">
+		UPDATE m_salesout
+		<set>
+			<if test="orderno != null and orderno != ''">
+				orderno =
+				#{orderno,jdbcType=VARCHAR},
+			</if>
+			<if test="goods != null and goods != ''">
+				goods =
+				#{goods,jdbcType=VARCHAR},
+			</if>
+			<if test="amount != null and amount != ''">
+				amount = #{amount,jdbcType=INTEGER},
+			</if>
+			<if test="remark != null and remark != ''">
+				remark =
+				#{remark,jdbcType=VARCHAR},
+			</if>
+		</set>
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</update>
+</mapper>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.data.dao.ISalesDao">
+
+	<!--通过主键删除用户 -->
+	<delete id="deleteById" parameterType="java.lang.String">
+		UPDATE
+		m_sales
+		SET del_flag='1'
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</delete>
+
+	<!-- 查询用户明细 -->
+	<select id="list" resultType="com.data.entity.SalesEntity"
+		parameterType="com.data.entity.SalesEntity">
+		SELECT
+		m.id,
+		m.breed,
+		m.sex,
+		DATE_FORMAT(m.birthday,'%Y-%m-%d') as birthday,
+		m.price,
+		DATE_FORMAT(m.time,'%Y-%m-%d %H:%i:%S') as time,
+		m.buyer,
+		mu1.user_name as seller,
+		m.remark,
+		m.del_flag
+		FROM
+		m_sales AS m
+		LEFT JOIN m_user mu1 ON m.seller = mu1.user_id and
+		mu1.del_flag ='0'
+		WHERE m.del_flag = '0'
+		<if test="buyer != null and buyer != ''">
+			AND m.buyer like
+			CONCAT('%',#{buyer,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="userName != null and userName != ''">
+			AND mu1.user_name
+			like CONCAT('%',#{userName,jdbcType=VARCHAR},'%' )
+		</if>
+		order by time desc
+		limit #{start},#{rows}
+	</select>
+
+	<!--按条件统计查询 -->
+	<select id="count" resultType="long"
+		parameterType="com.data.entity.SalesEntity">
+		SELECT count(*)
+		FROM m_sales mu
+		LEFT JOIN m_user mu1 ON mu.seller = mu1.user_id and
+		mu1.del_flag ='0'
+		WHERE mu.del_flag = '0'
+		<if test="buyer != null and buyer != ''">
+			AND mu.buyer like
+			CONCAT('%',#{buyer,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="userName != null and userName != ''">
+			AND mu1.user_name
+			like CONCAT('%',#{userName,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="sort != null and sort != ''">
+			order by #{sort} #{order}
+		</if>
+	</select>
+
+	<!--通过user_id获取用户信息 -->
+	<select id="getById" parameterType="string"
+		resultType="com.data.entity.SalesEntity">
+		SELECT
+		m.id,
+		m.breed,
+		m.sex,
+		DATE_FORMAT(m.birthday,'%Y-%m-%d') as birthday,
+		m.price,
+		DATE_FORMAT(m.time,'%Y-%m-%d %H:%i:%S') as time,
+		m.buyer,
+		mu1.user_name as seller,
+		m.remark,
+		m.del_flag
+		FROM m_sales m
+		LEFT JOIN m_user mu1 ON m.seller = mu1.user_id and
+		mu1.del_flag ='0'
+		WHERE m.del_flag = '0'
+		AND m.id = #{id,jdbcType=VARCHAR}
+	</select>
+
+	<!--新增用户 -->
+	<insert id="insert" parameterType="com.data.entity.SalesEntity">
+		INSERT INTO m_sales (
+		id,
+		breed,
+		sex,
+		birthday,
+		price,
+		time,
+		buyer,
+		seller,
+		remark,
+		del_flag
+		)VALUES(
+		REPLACE(UUID(),'-',''),
+		#{breed,jdbcType=VARCHAR},
+		#{sex,jdbcType=VARCHAR},
+		#{birthday,jdbcType=VARCHAR},
+		#{price,jdbcType=DOUBLE},
+		now(),
+		#{buyer,jdbcType=VARCHAR},
+		#{seller,jdbcType=VARCHAR},
+		#{remark,jdbcType=VARCHAR},
+		'0'
+		)
+
+	</insert>
+
+	<!--更新用户 -->
+	<update id="update" parameterType="com.data.entity.SalesEntity">
+		UPDATE m_sales
+		<set>
+			<if test="breed != null and breed != ''">
+				breed = #{breed,jdbcType=VARCHAR},
+			</if>
+			<if test="sex != null and sex != ''">
+				sex = #{sex,jdbcType=VARCHAR},
+			</if>
+			<if test="birthday != null and birthday != ''">
+				birthday =
+				#{birthday,jdbcType=VARCHAR},
+			</if>
+			<if test="price != null and price != ''">
+				price =
+				#{price,jdbcType=VARCHAR},
+			</if>
+			<if test="buyer != null and buyer != ''">
+				buyer =
+				#{buyer,jdbcType=VARCHAR},
+			</if>
+			<if test="remark != null and remark != ''">
+				remark =
+				#{remark,jdbcType=VARCHAR},
+			</if>
+		</set>
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</update>
+</mapper>

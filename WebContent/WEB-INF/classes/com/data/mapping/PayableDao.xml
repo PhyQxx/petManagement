@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.data.dao.IPayableDao">
+
+	<!--通过主键删除用户 -->
+	<delete id="deleteById" parameterType="java.lang.String">
+		UPDATE
+		m_payable
+		SET
+		del_flag='1'
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</delete>
+
+	<!-- 查询用户明细 -->
+	<select id="list" resultType="com.data.entity.PayableEntity"
+		parameterType="com.data.entity.PayableEntity">
+		SELECT
+		m.id,
+		m.`no`,
+		m.price,
+		CASE WHEN m.types = '0' THEN '已付款' WHEN m.types = '1' THEN '待支付' ELSE '' END AS types,
+		DATE_FORMAT(m.time,'%Y-%m-%d %H:%i:%S') as time,
+		m.payer,
+		m.remark,
+		m.del_flag
+		FROM
+		m_payable AS m
+		WHERE
+		m.del_flag = '0'
+		<if test="no != null and no != ''">
+			AND m.no like
+			CONCAT('%',#{no,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="payer != null and payer != ''">
+			AND m.payer
+			like
+			CONCAT('%',#{payer,jdbcType=VARCHAR},'%' )
+		</if>
+		order by time desc
+		limit #{start},#{rows}
+	</select>
+
+	<!--按条件统计查询 -->
+	<select id="count" resultType="long"
+		parameterType="com.data.entity.PayableEntity">
+		SELECT count(*)
+		FROM m_payable mu
+		WHERE mu.del_flag = '0'
+		<if test="no != null and no != ''">
+			AND m.no like
+			CONCAT('%',#{no,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="payer != null and payer != ''">
+			AND m.payer
+			like
+			CONCAT('%',#{payer,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="sort != null and sort != ''">
+			order by #{sort} #{order}
+		</if>
+	</select>
+
+	<!--通过user_id获取用户信息 -->
+	<select id="getById" parameterType="string"
+		resultType="com.data.entity.PayableEntity">
+		SELECT
+		m.id,
+		m.`no`,
+		m.price,
+		m.types,
+		m.payer,
+		DATE_FORMAT(m.time,'%Y-%m-%d %H:%i:%S') as time,
+		m.remark,
+		m.del_flag
+		FROM
+		m_payable AS m
+		WHERE m.del_flag
+		= '0'
+		AND m.id =
+		#{id,jdbcType=VARCHAR}
+	</select>
+
+	<!--新增用户 -->
+	<insert id="insert"
+		parameterType="com.data.entity.PayableEntity">
+		INSERT INTO m_payable (
+		id,
+		no,
+		price,
+		types,
+		payer,
+		time,
+		remark,
+		del_flag
+		)VALUES(
+		REPLACE(UUID(),'-',''),
+		#{no,jdbcType=VARCHAR},
+		#{price,jdbcType=VARCHAR},
+		#{types,jdbcType=VARCHAR},
+		#{payer,jdbcType=VARCHAR},
+		now(),
+		#{remark,jdbcType=VARCHAR},
+		'0'
+		)
+
+	</insert>
+
+	<!--更新用户 -->
+	<update id="update"
+		parameterType="com.data.entity.PayableEntity">
+		UPDATE m_payable
+		<set>
+			<if test="no != null and no != ''">
+				no =
+				#{no,jdbcType=VARCHAR},
+			</if>
+			<if test="price != null and price != ''">
+				price =
+				#{price,jdbcType=VARCHAR},
+			</if>
+			<if test="types != null and types != ''">
+				types = #{types,jdbcType=VARCHAR},
+			</if>
+			<if test="payer != null and payer != ''">
+				payer = #{payer,jdbcType=VARCHAR},
+			</if>
+			<if test="remark != null and remark != ''">
+				remark =
+				#{remark,jdbcType=VARCHAR},
+			</if>
+		</set>
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</update>
+</mapper>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.data.dao.ICustomerDao">
+
+	<!--通过主键删除用户 -->
+	<delete id="deleteById" parameterType="java.lang.String">
+		UPDATE
+		m_customer
+		SET
+		del_flag='1'
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</delete>
+
+	<!-- 查询用户明细 -->
+	<select id="list" resultType="com.data.entity.CustomerEntity"
+		parameterType="com.data.entity.CustomerEntity">
+		SELECT
+		m.id,
+		m.`no`,
+		m.`name`,
+		m.phone,
+		m.petno,
+		CASE WHEN m.member = '0'
+		THEN '否' WHEN m.member = '1' THEN '是' ELSE '' END AS member,
+		m.remark,
+		m.del_flag
+		FROM
+		m_customer AS m
+		WHERE
+		m.del_flag = '0'
+		<if test="name != null and name != ''">
+			AND m.name like
+			CONCAT('%',#{name,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="phone != null and phone != ''">
+			AND m.phone
+			like
+			CONCAT('%',#{phone,jdbcType=VARCHAR},'%' )
+		</if>
+		order by no desc
+		limit #{start},#{rows}
+	</select>
+
+	<!--按条件统计查询 -->
+	<select id="count" resultType="long"
+		parameterType="com.data.entity.CustomerEntity">
+		SELECT count(*)
+		FROM m_customer mu
+		WHERE mu.del_flag = '0'
+		<if test="name != null and name != ''">
+			AND m.name like
+			CONCAT('%',#{name,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="phone != null and phone != ''">
+			AND m.phone
+			like
+			CONCAT('%',#{phone,jdbcType=VARCHAR},'%' )
+		</if>
+		<if test="sort != null and sort != ''">
+			order by #{sort} #{order}
+		</if>
+	</select>
+
+	<!--通过user_id获取用户信息 -->
+	<select id="getById" parameterType="string"
+		resultType="com.data.entity.CustomerEntity">
+		SELECT
+		m.id,
+		m.`no`,
+		m.`name`,
+		m.phone,
+		m.petno,
+		m.member,
+		m.remark,
+		m.del_flag
+		FROM
+		m_customer AS m
+		WHERE m.del_flag
+		= '0'
+		AND m.id =
+		#{id,jdbcType=VARCHAR}
+	</select>
+
+	<!--新增用户 -->
+	<insert id="insert"
+		parameterType="com.data.entity.CustomerEntity">
+		INSERT INTO m_customer (
+		id,
+		no,
+		name,
+		phone,
+		petno,
+		member,
+		remark,
+		del_flag
+		)VALUES(
+		REPLACE(UUID(),'-',''),
+		#{no,jdbcType=VARCHAR},
+		#{name,jdbcType=VARCHAR},
+		#{phone,jdbcType=VARCHAR},
+		#{petno,jdbcType=VARCHAR},
+		#{member,jdbcType=VARCHAR},
+		#{remark,jdbcType=VARCHAR},
+		'0'
+		)
+
+	</insert>
+
+	<!--更新用户 -->
+	<update id="update"
+		parameterType="com.data.entity.CustomerEntity">
+		UPDATE m_customer
+		<set>
+			<if test="no != null and no != ''">
+				no =
+				#{no,jdbcType=VARCHAR},
+			</if>
+			<if test="name != null and name != ''">
+				name =
+				#{name,jdbcType=VARCHAR},
+			</if>
+			<if test="phone != null and phone != ''">
+				phone = #{phone,jdbcType=VARCHAR},
+			</if>
+			<if test="petno != null and petno != ''">
+				petno = #{petno,jdbcType=VARCHAR},
+			</if>
+			<if test="member != null and member != ''">
+				member = #{member,jdbcType=VARCHAR},
+			</if>
+			<if test="remark != null and remark != ''">
+				remark = #{remark,jdbcType=VARCHAR},
+			</if>
+		</set>
+		WHERE id=#{id,jdbcType=VARCHAR}
+		AND del_flag='0'
+	</update>
+</mapper>
